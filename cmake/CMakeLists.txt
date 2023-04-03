@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8...3.19)
+cmake_minimum_required(VERSION 3.9)
 
 project(Verovio)
 
@@ -20,6 +20,7 @@ option(NO_HUMDRUM_SUPPORT       "Disable Humdrum support"                      O
 option(MUSICXML_DEFAULT_HUMDRUM "Enable MusicXML to Humdrum by default"        OFF)
 option(NO_RUNTIME               "Disable runtime clock support"                ON)
 option(BUILD_AS_LIBRARY         "Build Verovio as library"                     OFF)
+option(BUILD_AS_RUST_LIBRARY    "Build Verovio as library for Rust"            OFF)
 option(USE_PAE_OLD_PARSER       "Use old PAE parser"                           OFF)
 
 if (NO_HUMDRUM_SUPPORT AND MUSICXML_DEFAULT_HUMDRUM)
@@ -29,31 +30,36 @@ endif()
 # Sets the compile-time value for the RESOURCE_DIR macro in the source code.
 add_compile_definitions(RESOURCE_DIR="${CMAKE_INSTALL_PREFIX}/share/verovio")
 
-include_directories(
-    ../include
-    ../include/crc
-    ../include/midi
-    ../include/hum
-    ../include/json
-    ../include/pugi
-    ../include/zip
-    ../include/vrv
-    ../libmei/dist
-    ../libmei/addons
+set(VEROVIO_INCLUDE_DIRECTORIES
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include/crc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include/midi"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include/hum"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include/json"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include/pugi"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include/zip"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include/vrv"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../libmei/dist"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../libmei/addons"
 )
+
+if (ANDROID)
+    find_library(log-lib log)
+    link_libraries(${log-lib})
+endif()
 
 if(MSVC)
     add_definitions(/W2)
     add_definitions(/wd4244)          # suppress warning of possible loss of precision
-    add_definitions(-DNO_PAE_SUPPORT) # regex is working differently under Windows so PAE is not supported (yet)
-    add_definitions(-DUSE_PAE_OLD_PARSER)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DNO_PAE_SUPPORT) # regex is working differently under Windows so PAE is not supported (yet)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DUSE_PAE_OLD_PARSER)
     add_definitions(/std:c++17)
-    include_directories(../include/win32)
+    list(APPEND VEROVIO_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../include/win32")
 else()
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         message(STATUS "Enabling debug information")
         add_definitions(-g)
-        add_definitions(-DDEBUG)
+        list(APPEND VEROVIO_MACRO_DEFINITIONS -DDEBUG)
     endif()
 
     # jsonxx raises -Wdollar-in-identifier-extension
@@ -106,6 +112,8 @@ else()
 
 endif()
 
+include_directories(${VEROVIO_INCLUDE_DIRECTORIES})
+
 execute_process(
     COMMAND ../tools/get_git_commit.sh
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -113,39 +121,41 @@ execute_process(
 )
 
 if(VRV_DYNAMIC_CAST)
-    add_definitions(-DVRV_DYNAMIC_CAST)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DVRV_DYNAMIC_CAST)
 endif()
 
 if(NO_DARMS_SUPPORT)
-    add_definitions(-DNO_DARMS_SUPPORT)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DNO_DARMS_SUPPORT)
 endif()
 
 if(NO_PAE_SUPPORT)
-    add_definitions(-DNO_PAE_SUPPORT)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DNO_PAE_SUPPORT)
 elseif(USE_PAE_OLD_PARSER)
-    add_definitions(-DUSE_PAE_OLD_PARSER)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DUSE_PAE_OLD_PARSER)
 endif()
 
 if(NO_MUSICXML_SUPPORT)
-    add_definitions(-DNO_MUSICXML_SUPPORT)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DNO_MUSICXML_SUPPORT)
 endif()
 
 if(NO_MXL_SUPPORT)
-    add_definitions(-DNO_MXL_SUPPORT)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DNO_MXL_SUPPORT)
 endif()
 
 if(NO_HUMDRUM_SUPPORT)
-    add_definitions(-DNO_HUMDRUM_SUPPORT)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DNO_HUMDRUM_SUPPORT)
 else()
     file(GLOB hum_SRC "../src/hum/*.cpp")
     if (MUSICXML_DEFAULT_HUMDRUM)
-        add_definitions(-DMUSICXML_DEFAULT_HUMDRUM)
+        list(APPEND VEROVIO_MACRO_DEFINITIONS -DMUSICXML_DEFAULT_HUMDRUM)
     endif()
 endif()
 
 if(NO_RUNTIME)
-    add_definitions(-DNO_RUNTIME)
+    list(APPEND VEROVIO_MACRO_DEFINITIONS -DNO_RUNTIME)
 endif()
+
+add_definitions(${VEROVIO_MACRO_DEFINITIONS})
 
 file(GLOB verovio_SRC "../src/*.cpp")
 file(GLOB libmei_dist_SRC "../libmei/dist/*.cpp")
@@ -172,7 +182,80 @@ set(all_SRC
 # Shared library #
 ##################
 
-if (BUILD_AS_LIBRARY)
+if (BUILD_AS_RUST_LIBRARY)
+    message(STATUS "***** Building Verovio as shared library for Rust *****")
+
+    if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
+        include(CheckIPOSupported)
+        check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_ERROR)
+        if (NOT IPO_SUPPORTED) 
+            message(FATAL_ERROR "IPO is not IPO_SUPPORTED: ${IPO_ERROR}")
+        endif()
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif()
+
+    if (WIN32)
+        set(AUTOCXX_GEN_ANNOTATIONS "__declspec(dllexport)")
+    else()
+        set(AUTOCXX_GEN_ANNOTATIONS "__attribute__((visibility(\"default\")))")
+    endif()
+
+    # Increase the following as the binding is developed
+    set(AUTOCXX_NUM_GENERATED_FILES 10)
+    set(AUTOCXX_CXX_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/autocxx-generated")
+    set(AUTOCXX_RUST_WRAPPER "${CMAKE_CURRENT_SOURCE_DIR}/../tools/rust_wrapper.rs")
+
+    math(EXPR AUTOCXX_GENERATED_FILES_RANGE_STOP "${AUTOCXX_NUM_GENERATED_FILES} - 1")
+    foreach (idx RANGE ${AUTOCXX_GENERATED_FILES_RANGE_STOP})
+        list(
+            APPEND
+            AUTOCXX_GENERATED_FILES
+            "${AUTOCXX_CXX_OUTPUT_DIR}/gen${idx}.cpp"
+        )
+    endforeach()
+
+    foreach (inc_dir ${VEROVIO_INCLUDE_DIRECTORIES})
+        list(
+            APPEND
+            AUTOCXX_INC_ARGUMENTS
+            --inc ${inc_dir}
+        )
+        file(GLOB inc_dir_headers "${inc_dir}/*.h")
+        list(
+            APPEND
+            AUTOCXX_TARGET_HEADERS
+            ${inc_dir_headers}
+        )
+    endforeach()
+
+    add_custom_command(
+        OUTPUT ${AUTOCXX_GENERATED_FILES}
+        COMMAND ${CMAKE_COMMAND} ARGS
+            -E env
+            RUST_BACKTRACE=1
+            autocxx-gen
+            --outdir ${AUTOCXX_CXX_OUTPUT_DIR}
+            --cpp-extension cpp
+            ${AUTOCXX_INC_ARGUMENTS}
+            --gen-cpp
+            --generate-cxx-h
+            --generate-exact ${AUTOCXX_NUM_GENERATED_FILES}
+            --cxx-impl-annotations ${AUTOCXX_GEN_ANNOTATIONS}
+            ${AUTOCXX_RUST_WRAPPER}
+            --
+            -std=c++17
+            ${VEROVIO_MACRO_DEFINITIONS}
+            -DRUST_LIBRARY
+        DEPENDS
+            ${AUTOCXX_RUST_WRAPPER}
+            ${AUTOCXX_TARGET_HEADERS}
+        VERBATIM
+    )
+
+    add_definitions(-DRUST_LIBRARY)
+    add_library(verovio SHARED ${AUTOCXX_GENERATED_FILES} ${all_SRC})
+
+elseif (BUILD_AS_LIBRARY)
     message(STATUS "***** Building Verovio as shared library *****")
     add_library(verovio SHARED ../tools/c_wrapper.cpp ${all_SRC})
 
