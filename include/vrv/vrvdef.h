@@ -470,19 +470,21 @@ enum FunctorCode { FUNCTOR_CONTINUE = 0, FUNCTOR_SIBLINGS, FUNCTOR_STOP };
 // Unicode music codepoints
 //----------------------------------------------------------------------------
 
-#define UNICODE_FLAT U'\u266D' // ♭
-#define UNICODE_NATURAL U'\u266E' // ♮
-#define UNICODE_SHARP U'\u266F' // ♯
+// Do not use unicode character literals here, as Rust bindgen fails to generate bindings.
 
-#define UNICODE_UNDERTIE U'\u203F' // ‿
+#define UNICODE_FLAT ((char32_t)0x266D) // ♭
+#define UNICODE_NATURAL ((char32_t)0x266E) // ♮
+#define UNICODE_SHARP ((char32_t)0x266F) // ♯
 
-#define UNICODE_DAL_SEGNO U'\U0001D109' // 𝄉
-#define UNICODE_DA_CAPO U'\U0001D10A' // 𝄊
-#define UNICODE_SEGNO U'\U0001D10B' // 𝄋
-#define UNICODE_CODA U'\U0001D10C' // 𝄌
+#define UNICODE_UNDERTIE ((char32_t)0x203F) // ‿
 
-#define UNICODE_DOUBLE_FLAT U'\U0001D12B' // 𝄫
-#define UNICODE_DOUBLE_SHARP U'\U0001D12A' // 𝄪
+#define UNICODE_DAL_SEGNO ((char32_t)0x0001D109) // 𝄉
+#define UNICODE_DA_CAPO ((char32_t)0x0001D10A) // 𝄊
+#define UNICODE_SEGNO ((char32_t)0x0001D10B) // 𝄋
+#define UNICODE_CODA ((char32_t)0x0001D10C) // 𝄌
+
+#define UNICODE_DOUBLE_FLAT ((char32_t)0x0001D12B) // 𝄫
+#define UNICODE_DOUBLE_SHARP ((char32_t)0x0001D12A) // 𝄪
 
 //----------------------------------------------------------------------------
 // VerovioText codepoints
