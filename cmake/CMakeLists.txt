@@ -202,14 +202,16 @@ if (BUILD_AS_RUST_LIBRARY)
 
     # Increase the following as the binding is developed
     set(AUTOCXX_NUM_GENERATED_FILES 10)
-    set(AUTOCXX_CXX_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/autocxx-generated")
+    set(AUTOCXX_CXX_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/autocxx-generated/cxx")
+    set(AUTOCXX_RUST_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/autocxx-generated/rust")
     set(AUTOCXX_RUST_WRAPPER "${CMAKE_CURRENT_SOURCE_DIR}/../tools/rust_wrapper.rs")
+    set(AUTOCXX_GENERATED_RUST_FILES "${AUTOCXX_RUST_OUTPUT_DIR}/ghost")
 
     math(EXPR AUTOCXX_GENERATED_FILES_RANGE_STOP "${AUTOCXX_NUM_GENERATED_FILES} - 1")
     foreach (idx RANGE ${AUTOCXX_GENERATED_FILES_RANGE_STOP})
         list(
             APPEND
-            AUTOCXX_GENERATED_FILES
+            AUTOCXX_GENERATED_CXX_FILES
             "${AUTOCXX_CXX_OUTPUT_DIR}/gen${idx}.cpp"
         )
     endforeach()
@@ -228,32 +230,45 @@ if (BUILD_AS_RUST_LIBRARY)
         )
     endforeach()
 
-    add_custom_command(
-        OUTPUT ${AUTOCXX_GENERATED_FILES}
-        COMMAND ${CMAKE_COMMAND} ARGS
-            -E env
-            RUST_BACKTRACE=1
-            autocxx-gen
-            --outdir ${AUTOCXX_CXX_OUTPUT_DIR}
-            --cpp-extension cpp
-            ${AUTOCXX_INC_ARGUMENTS}
-            --gen-cpp
-            --generate-cxx-h
-            --generate-exact ${AUTOCXX_NUM_GENERATED_FILES}
-            --cxx-impl-annotations ${AUTOCXX_GEN_ANNOTATIONS}
-            ${AUTOCXX_RUST_WRAPPER}
-            --
-            -std=c++17
-            ${VEROVIO_MACRO_DEFINITIONS}
-            -DRUST_LIBRARY
-        DEPENDS
-            ${AUTOCXX_RUST_WRAPPER}
-            ${AUTOCXX_TARGET_HEADERS}
-        VERBATIM
+    set(
+        AUTOCXX_CXX_ARGUMENTS
+        --cpp-extension cpp
+        --gen-cpp
+        --generate-cxx-h
+        --cxx-impl-annotations ${AUTOCXX_GEN_ANNOTATIONS}
+        --generate-exact ${AUTOCXX_NUM_GENERATED_FILES}
+    )
+    set(
+        AUTOCXX_RUST_ARGUMENTS
+        --gen-rs-include
     )
 
+    function(invoke_autocxx LANGUAGE)
+        add_custom_command(
+            OUTPUT ${AUTOCXX_GENERATED_${LANGUAGE}_FILES}
+            COMMAND autocxx-gen ARGS
+                --outdir ${AUTOCXX_${LANGUAGE}_OUTPUT_DIR}
+                ${AUTOCXX_INC_ARGUMENTS}
+                ${AUTOCXX_${LANGUAGE}_ARGUMENTS}
+                ${AUTOCXX_RUST_WRAPPER}
+                --
+                -std=c++17
+                ${VEROVIO_MACRO_DEFINITIONS}
+                -DRUST_LIBRARY
+            DEPENDS
+                ${AUTOCXX_RUST_WRAPPER}
+                ${AUTOCXX_TARGET_HEADERS}
+            VERBATIM
+        )
+    endfunction()
+
+    invoke_autocxx(CXX)
+    invoke_autocxx(RUST)
+
+    add_custom_target(verovio-rs-generated DEPENDS ${AUTOCXX_GENERATED_RUST_FILES})
     add_definitions(-DRUST_LIBRARY)
-    add_library(verovio SHARED ${AUTOCXX_GENERATED_FILES} ${all_SRC})
+    add_library(verovio SHARED ${AUTOCXX_GENERATED_CXX_FILES} ${all_SRC})
+    add_dependencies(verovio verovio-rs-generated)
 
 elseif (BUILD_AS_LIBRARY)
     message(STATUS "***** Building Verovio as shared library *****")
