@@ -9,6 +9,7 @@
 #define __VRV_GLYPH_H__
 
 #include <algorithm>
+#include <optional>
 #include <string>
 
 //----------------------------------------------------------------------------
@@ -16,7 +17,17 @@
 #include "devicecontextbase.h"
 #include "vrvdef.h"
 
+//----------------------------------------------------------------------------
+
+#include "pugixml.hpp"
+
 namespace vrv {
+
+class ResourceIO;
+
+//----------------------------------------------------------------------------
+// Glyph
+//----------------------------------------------------------------------------
 
 /**
  * This class is used for storing a music font glyph.
@@ -56,6 +67,14 @@ public:
     ///@{
     int GetUnitsPerEm() const { return m_unitsPerEm; }
     void SetUnitsPerEm(int units) { m_unitsPerEm = units; }
+    ///@}
+
+    /**
+     * @name Setter and getter for the font name
+     */
+    ///@{
+    std::string GetFontName() const { return m_fontName; }
+    void SetFontName(const std::string &fontName) { m_fontName = fontName; }
     ///@}
 
     /**
@@ -106,6 +125,16 @@ public:
      */
     const Point *GetAnchor(SMuFLGlyphAnchor anchor) const;
 
+    /**
+     * @name Setter for the Resource IO
+     */
+    void SetResourceIO(ResourceIO *resourceIO) { m_resourceIO = resourceIO; }
+
+    /**
+     * Loads the corresponding XML file
+     */
+    pugi::xml_parse_result Load(pugi::xml_document &sourceDoc) const;
+
 private:
     //
 public:
@@ -120,6 +149,8 @@ private:
     int m_horizAdvX;
     /** Units per EM for the glyph */
     int m_unitsPerEm;
+    /** The name of the font of this glyph */
+    std::string m_fontName;
     /** The Unicode code in hexa as string */
     std::string m_codeStr;
     /** Path to the glyph XML file */
@@ -128,6 +159,8 @@ private:
     std::map<SMuFLGlyphAnchor, Point> m_anchors;
     /** A flag indicating it is a fallback */
     bool m_isFallback;
+    /** The ResourceIO owned by Resources responsible for loading glyph XML files */
+    ResourceIO *m_resourceIO;
 };
 
 } // namespace vrv

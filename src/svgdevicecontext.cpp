@@ -91,16 +91,13 @@ void SvgDeviceContext::IncludeTextFont(const std::string &fontname, const Resour
     std::string cssContent;
 
     if (m_smuflTextFont == SMUFLTEXTFONT_embedded) {
-        const std::string cssFontPath = StringFormat("%s/%s.css", resources->GetPath().c_str(), fontname.c_str());
-        std::ifstream cssFontFile(cssFontPath);
-        if (!cssFontFile.is_open()) {
+        std::optional<std::string> maybeCssContent = resources->LoadCssFont(fontname);
+        if (!maybeCssContent) {
             LogWarning("The CSS font for '%s' could not be loaded and will not be embedded in the SVG",
                 resources->GetCurrentFontName().c_str());
         }
         else {
-            std::stringstream cssFontStream;
-            cssFontStream << cssFontFile.rdbuf();
-            cssContent = cssFontStream.str();
+            cssContent = std::move(maybeCssContent).value();
         }
     }
     else {
@@ -173,8 +170,7 @@ void SvgDeviceContext::Commit(bool xml_declaration)
         // for each needed glyph
         for (const Glyph *smuflGlyph : m_smuflGlyphs) {
             // load the XML file that contains it as a pugi::xml_document
-            std::ifstream source(smuflGlyph->GetPath());
-            sourceDoc.load(source);
+            smuflGlyph->Load(sourceDoc);
 
             // copy all the nodes inside into the master document
             for (pugi::xml_node child = sourceDoc.first_child(); child; child = child.next_sibling()) {

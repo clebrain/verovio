@@ -9,10 +9,14 @@
 
 //----------------------------------------------------------------------------
 
+#include <fstream>
+#include <functional>
+#include <sstream>
 #include <string>
 
 //----------------------------------------------------------------------------
 
+#include "resourceio.h"
 #include "smufl.h"
 #include "vrv.h"
 #include "vrvdef.h"
@@ -49,6 +53,8 @@ Resources::Resources()
     m_path = s_defaultPath;
     m_currentStyle = k_defaultStyle;
 }
+
+Resources::~Resources() = default;
 
 bool Resources::InitFonts()
 {
@@ -89,6 +95,28 @@ bool Resources::InitFonts()
 bool Resources::SetFont(const std::string &fontName)
 {
     return LoadFont(fontName);
+}
+
+void Resources::SetIO(std::unique_ptr<ResourceIO> resourceIO)
+{
+    m_resourceIO = std::move(resourceIO);
+}
+
+std::optional<std::string> Resources::LoadCssFont(const std::string &fontName) const
+{
+    if (m_resourceIO) {
+        return m_resourceIO->QueryCssFont(fontName);
+    }
+
+    const std::string cssFontPath = StringFormat("%s/%s.css", GetPath().c_str(), fontName.c_str());
+    std::ifstream cssFontFile(cssFontPath);
+    if (!cssFontFile.is_open()) {
+        return std::nullopt;
+    }
+
+    std::stringstream cssFontStream;
+    cssFontStream << cssFontFile.rdbuf();
+    return cssFontStream.str();
 }
 
 const Glyph *Resources::GetGlyph(char32_t smuflCode) const
@@ -161,8 +189,18 @@ char32_t Resources::GetSmuflGlyphForUnicodeChar(const char32_t unicodeChar)
 bool Resources::LoadFont(const std::string &fontName, bool withFallback)
 {
     pugi::xml_document doc;
-    const std::string filename = Resources::GetPath() + "/" + fontName + ".xml";
-    pugi::xml_parse_result parseResult = doc.load_file(filename.c_str());
+    pugi::xml_parse_result parseResult = std::invoke([&] {
+        if (m_resourceIO) {
+            const std::optional<std::string> queryResult = m_resourceIO->QueryFont(fontName);
+            if (queryResult) {
+                return doc.load_buffer(queryResult->c_str(), queryResult->size());
+            }
+        }
+
+        const std::string filename = Resources::GetPath() + "/" + fontName + ".xml";
+        return doc.load_file(filename.c_str());
+    });
+
     if (!parseResult) {
         // File not found, default bounding boxes will be used
         LogError("Failed to load font and glyph bounding boxes");
@@ -224,13 +262,26 @@ bool Resources::InitTextFont(const std::string &fontName, const StyleAttributes 
 {
     // For the text font, we load the bounding boxes only
     pugi::xml_document doc;
-    // For now, we have only Times bounding boxes for ASCII chars
-    // For any other char, we currently use 'o' bounding box
-    std::string filename = GetPath() + "/text/" + fontName + ".xml";
-    pugi::xml_parse_result result = doc.load_file(filename.c_str());
+    pugi::xml_parse_result result = std::invoke([&] {
+        if (m_resourceIO) {
+            const std::optional<std::string> queryResult = m_resourceIO->QueryTextFont(fontName);
+            if (queryResult) {
+                return doc.load_buffer(queryResult->c_str(), queryResult->size());
+            }
+        }
+
+        // For now, we have only Times bounding boxes for ASCII chars
+        // For any other char, we currently use 'o' bounding box
+        std::string filename = GetPath() + "/text/" + fontName + ".xml";
+        pugi::xml_parse_result result = doc.load_file(filename.c_str());
+        if (!result) {
+            // File not found, default bounding boxes will be used
+            LogInfo("Cannot load bounding boxes for text font '%s'", filename.c_str());
+        }
+        return result;
+    });
+
     if (!result) {
-        // File not found, default bounding boxes will be used
-        LogInfo("Cannot load bounding boxes for text font '%s'", filename.c_str());
         return false;
     }
     pugi::xml_node root = doc.first_child();

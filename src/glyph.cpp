@@ -11,9 +11,12 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <fstream>
+#include <optional>
 
 //----------------------------------------------------------------------------
 
+#include "resourceio.h"
 #include "vrv.h"
 
 //----------------------------------------------------------------------------
@@ -142,6 +145,20 @@ bool Glyph::HasAnchor(SMuFLGlyphAnchor anchor) const
 const Point *Glyph::GetAnchor(SMuFLGlyphAnchor anchor) const
 {
     return &m_anchors.at(anchor);
+}
+
+pugi::xml_parse_result Glyph::Load(pugi::xml_document &sourceDoc) const
+{
+    if (m_resourceIO) {
+        std::optional<std::string> source = m_resourceIO->QueryGlyph(m_fontName, m_codeStr);
+        if (source) {
+            return sourceDoc.load_buffer(source->c_str(), source->size());
+        }
+        return pugi::xml_parse_result();
+    }
+
+    std::ifstream source(GetPath());
+    return sourceDoc.load(source);
 }
 
 } // namespace vrv

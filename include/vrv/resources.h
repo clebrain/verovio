@@ -8,13 +8,17 @@
 #ifndef __VRV_RESOURCES_H__
 #define __VRV_RESOURCES_H__
 
+#include <memory>
 #include <unordered_map>
+#include <optional>
 
 //----------------------------------------------------------------------------
 
 #include "glyph.h"
 
 namespace vrv {
+
+class ResourceIO;
 
 //----------------------------------------------------------------------------
 // Resources
@@ -37,7 +41,7 @@ public:
      */
     ///@{
     Resources();
-    virtual ~Resources() = default;
+    virtual ~Resources();
     ///@}
 
     /**
@@ -50,6 +54,13 @@ public:
     std::string GetPath() const { return m_path; }
     void SetPath(const std::string &path) { m_path = path; }
     ///@}
+
+    /**
+     * Set a new ResourceIO instance
+     */
+    void SetIO(std::unique_ptr<ResourceIO> resourceIO);
+
+    std::optional<std::string> LoadCssFont(const std::string &fontName) const;
 
     /**
      * Font initialization
@@ -114,6 +125,8 @@ private:
      * A map of glyph name / code
      */
     GlyphNameTable m_glyphNameTable;
+    /** The ResourceIO responsible for loading font XML files */
+    std::unique_ptr<ResourceIO> m_resourceIO;
 
     //----------------//
     // Static members //
