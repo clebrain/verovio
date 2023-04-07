@@ -248,7 +248,9 @@ bool Resources::LoadFont(const std::string &fontName, bool withFallback)
         if (current.attribute("w")) width = current.attribute("w").as_float();
         if (current.attribute("h")) height = current.attribute("h").as_float();
         glyph.SetBoundingBox(x, y, width, height);
+        glyph.SetFontName(fontName);
         glyph.SetPath(Resources::GetPath() + "/" + fontName + "/" + c_attribute.value() + ".xml");
+        glyph.SetResourceIO(m_resourceIO.get());
         if (current.attribute("h-a-x")) glyph.SetHorizAdvX(current.attribute("h-a-x").as_float());
 
         // load anchors

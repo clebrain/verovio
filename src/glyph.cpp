@@ -40,6 +40,7 @@ Glyph::Glyph()
     m_codeStr = "[unset]";
     m_path = "[unset]";
     m_isFallback = false;
+    m_resourceIO = nullptr;
 }
 
 Glyph::Glyph(std::string path, std::string codeStr)
@@ -52,6 +53,7 @@ Glyph::Glyph(std::string path, std::string codeStr)
     m_unitsPerEm = 20480;
     m_codeStr = codeStr;
     m_isFallback = false;
+    m_resourceIO = nullptr;
 
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(path.c_str());
@@ -88,6 +90,7 @@ Glyph::Glyph(int unitsPerEm)
     m_unitsPerEm = unitsPerEm * 10;
     m_codeStr = "[unset]";
     m_path = "[unset]";
+    m_resourceIO = nullptr;
 }
 
 Glyph::~Glyph() {}
