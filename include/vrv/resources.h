@@ -9,8 +9,8 @@
 #define __VRV_RESOURCES_H__
 
 #include <memory>
-#include <unordered_map>
 #include <optional>
+#include <unordered_map>
 
 //----------------------------------------------------------------------------
 
