@@ -119,6 +119,20 @@ std::optional<std::string> Resources::LoadCssFont(const std::string &fontName) c
     return cssFontStream.str();
 }
 
+pugi::xml_parse_result Resources::LoadFooter(pugi::xml_document &footerDoc) const
+{
+    if (m_resourceIO) {
+        std::optional<std::string> content = m_resourceIO->QueryFooter();
+        if (content) {
+            return footerDoc.load_buffer(content->c_str(), content->size());
+        }
+        return pugi::xml_parse_result();
+    }
+
+    const std::string footerPath = GetPath() + "/footer.svg";
+    return footerDoc.load_file(footerPath.c_str());
+}
+
 const Glyph *Resources::GetGlyph(char32_t smuflCode) const
 {
     return m_fontGlyphTable.count(smuflCode) ? &m_fontGlyphTable.at(smuflCode) : NULL;

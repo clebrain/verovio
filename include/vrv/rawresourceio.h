@@ -28,10 +28,11 @@ public:
         bool (*m_queryTextFont)(void *context, const std::string &fontName, std::string &output) noexcept;
         bool (*m_queryGlyph)(
             void *context, const std::string &fontName, const std::string &codePoint, std::string &output) noexcept;
+        bool (*m_queryFooter)(void *context, std::string &output) noexcept;
     };
 
 public:
-    RawResourceIO(FunctionTable *table, void *context);
+    RawResourceIO(const FunctionTable *table, void *context);
 
     virtual ~RawResourceIO() final override;
 
@@ -44,8 +45,10 @@ public:
     virtual std::optional<std::string> QueryGlyph(
         const std::string &fontName, const std::string &codePoint) final override;
 
+    virtual std::optional<std::string> QueryFooter() final override;
+
 private:
-    FunctionTable *m_table;
+    const FunctionTable *m_table;
     void *m_context;
 };
 

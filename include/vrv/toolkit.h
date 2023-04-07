@@ -81,7 +81,7 @@ public:
      * Create a RawResourceIO instance from the given table and the context and register the
      * ResourceIO instance to the internal Resource instance.
      */
-    bool SetResourceIO(RawResourceIO::FunctionTable *table, void *context);
+    bool SetResourceIO(const RawResourceIO::FunctionTable *table, void *context);
 
     /**
      * Set the resource path for the Toolkit instance.

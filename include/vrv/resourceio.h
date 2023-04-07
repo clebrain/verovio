@@ -28,6 +28,7 @@ public:
     virtual std::optional<std::string> QueryCssFont(const std::string &fontName) = 0;
     virtual std::optional<std::string> QueryTextFont(const std::string &fontName) = 0;
     virtual std::optional<std::string> QueryGlyph(const std::string &fontName, const std::string &codePoint) = 0;
+    virtual std::optional<std::string> QueryFooter() = 0;
 };
 
 } // namespace vrv

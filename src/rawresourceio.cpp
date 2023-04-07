@@ -18,7 +18,7 @@ namespace vrv {
 // RawResourceIO
 //----------------------------------------------------------------------------
 
-RawResourceIO::RawResourceIO(FunctionTable *table, void *context) : m_table{ table }, m_context{ context } {}
+RawResourceIO::RawResourceIO(const FunctionTable *table, void *context) : m_table{ table }, m_context{ context } {}
 
 RawResourceIO::~RawResourceIO()
 {
@@ -56,6 +56,15 @@ std::optional<std::string> RawResourceIO::QueryGlyph(const std::string &fontName
 {
     std::string output;
     if (!m_table->m_queryGlyph(m_context, fontName, codePoint, output)) {
+        return std::nullopt;
+    }
+    return output;
+}
+
+std::optional<std::string> RawResourceIO::QueryFooter()
+{
+    std::string output;
+    if (!m_table->m_queryFooter(m_context, output)) {
         return std::nullopt;
     }
     return output;

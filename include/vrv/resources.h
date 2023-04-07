@@ -60,7 +60,13 @@ public:
      */
     void SetIO(std::unique_ptr<ResourceIO> resourceIO);
 
+    /**
+     * Load resources from the resource directory or via the ResourceIO
+     */
+    ///@{
     std::optional<std::string> LoadCssFont(const std::string &fontName) const;
+    pugi::xml_parse_result LoadFooter(pugi::xml_document &footerDoc) const;
+    ///@}
 
     /**
      * Font initialization

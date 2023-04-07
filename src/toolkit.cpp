@@ -123,7 +123,7 @@ bool Toolkit::SetResourcePath(const std::string &path)
     return resources.InitFonts();
 }
 
-bool Toolkit::SetResourceIO(RawResourceIO::FunctionTable *table, void *context)
+bool Toolkit::SetResourceIO(const RawResourceIO::FunctionTable *table, void *context)
 {
     Resources &resources = m_doc.GetResourcesForModification();
     resources.SetIO(std::make_unique<RawResourceIO>(table, context));
