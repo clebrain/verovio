@@ -14,6 +14,7 @@
 
 #include "doc.h"
 #include "docselection.h"
+#include "rawresourceio.h"
 #include "toolkitdef.h"
 #include "view.h"
 
@@ -75,6 +76,12 @@ public:
      * @return A string with the resource path
      */
     std::string GetResourcePath() const;
+
+    /**
+     * Create a RawResourceIO instance from the given table and the context and register the
+     * ResourceIO instance to the internal Resource instance.
+     */
+    void SetResourceIO(RawResourceIO::FunctionTable *table, void *context);
 
     /**
      * Set the resource path for the Toolkit instance.

@@ -12,6 +12,7 @@
 #include <cassert>
 #include <codecvt>
 #include <locale>
+#include <memory>
 #include <regex>
 
 //----------------------------------------------------------------------------
@@ -35,6 +36,8 @@
 #include "note.h"
 #include "options.h"
 #include "page.h"
+#include "rawresourceio.h"
+#include "resourceio.h"
 #include "runtimeclock.h"
 #include "score.h"
 #include "slur.h"
@@ -118,6 +121,12 @@ bool Toolkit::SetResourcePath(const std::string &path)
     Resources &resources = m_doc.GetResourcesForModification();
     resources.SetPath(path);
     return resources.InitFonts();
+}
+
+void Toolkit::SetResourceIO(RawResourceIO::FunctionTable *table, void *context)
+{
+    Resources &resources = m_doc.GetResourcesForModification();
+    resources.SetIO(std::make_unique<RawResourceIO>(table, context));
 }
 
 bool Toolkit::SetFont(const std::string &fontName)
