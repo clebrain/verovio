@@ -2479,9 +2479,17 @@ void View::DrawTempo(DeviceContext *dc, Tempo *tempo, Measure *measure, System *
         dc->SetBrush(m_currentColour, AxSOLID);
         dc->SetFont(&tempoTxt);
 
-        dc->StartText(ToDeviceContextX(params.m_x), ToDeviceContextY(params.m_y), alignment);
-        this->DrawTextChildren(dc, tempo, params);
-        dc->EndText();
+        if (tempo->GetChildCount() || tempo->HasNonEditorialContent()) {
+            FloatingPositioner *positioner = tempo->GetCurrentFloatingPositioner();
+            if (positioner) positioner->SetEmptyBB();
+        }
+
+        for (Object *current : tempo->GetChildren()) {
+            dc->StartText(ToDeviceContextX(params.m_x), ToDeviceContextY(params.m_y), alignment);
+            this->DrawTextElement(dc, vrv_cast<TextElement *>(current), params);
+            params.m_x += current->GetContentX2() - current->GetContentX1();
+            dc->EndText();
+        }
 
         dc->ResetFont();
         dc->ResetBrush();
