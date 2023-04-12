@@ -29,6 +29,16 @@ namespace vrv {
 
 class Object;
 
+#ifdef RUST_LIBRARY
+
+/**
+ * Sets the function that will handle logging instead of the default logger.
+ */
+// Make interceptor void* to be recognized by autocxx
+void SetLogInterceptor(void *interceptor);
+
+#endif
+
 /**
  * The following functions are helpers for formatting, conversion, or logging.
  * Most of them differ if they are used in the command line tool or in emscripten

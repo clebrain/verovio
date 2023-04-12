@@ -51,6 +51,25 @@
 #define android_log_puts(prio, msg) __android_log_print(prio, "Verovio", "%s", msg)
 #endif
 
+#ifdef RUST_LIBRARY
+#define HANDLE_INTERCEPTOR(level, message)                                                                             \
+    if (auto interceptor = globalLogInterceptor.load(std::memory_order_acquire)) {                                     \
+        interceptor((message), (level));                                                                               \
+        return;                                                                                                        \
+    }
+
+#define HANDLE_INTERCEPTOR_VA_ARGS(level)                                                                              \
+    if (auto interceptor = globalLogInterceptor.load(std::memory_order_acquire)) {                                     \
+        va_list args;                                                                                                  \
+        va_start(args, fmt);                                                                                           \
+        interceptor(StringFormatVariable(fmt, args), (level));                                                         \
+        return;                                                                                                        \
+    }
+#else
+#define HANDLE_INTERCEPTOR(level, message)
+#define HANDLE_INTERCEPTOR_VA_ARGS(level)
+#endif
+
 #define STRING_FORMAT_MAX_LEN 2048
 
 namespace vrv {
@@ -70,6 +89,20 @@ bool loggingToBuffer = false;
 
 std::vector<std::string> logBuffer;
 
+#ifdef RUST_LIBRARY
+
+using LogInterceptor = void (*)(const std::string &message, LogLevel level);
+
+/** Global for hooking logging */
+std::atomic<LogInterceptor> globalLogInterceptor;
+
+void SetLogInterceptor(void *interceptor)
+{
+    globalLogInterceptor.store(reinterpret_cast<LogInterceptor>(interceptor), std::memory_order::memory_order_release);
+}
+
+#endif
+
 void LogElapsedTimeStart()
 {
     gettimeofday(&start, NULL);
@@ -87,6 +120,8 @@ void LogElapsedTimeEnd(const char *msg)
 
 void LogDebug(const char *fmt, ...)
 {
+    HANDLE_INTERCEPTOR_VA_ARGS(LOG_DEBUG);
+
     if (logLevel < LOG_DEBUG) return;
 
 #if defined(DEBUG)
@@ -101,6 +136,8 @@ void LogDebug(const char *fmt, ...)
 
 void LogError(const char *fmt, ...)
 {
+    HANDLE_INTERCEPTOR_VA_ARGS(LOG_ERROR);
+
     if (logLevel < LOG_ERROR) return;
 
     std::string s;
@@ -113,6 +150,8 @@ void LogError(const char *fmt, ...)
 
 void LogInfo(const char *fmt, ...)
 {
+    HANDLE_INTERCEPTOR_VA_ARGS(LOG_INFO);
+
     if (logLevel < LOG_INFO) return;
 
     std::string s;
@@ -125,6 +164,8 @@ void LogInfo(const char *fmt, ...)
 
 void LogWarning(const char *fmt, ...)
 {
+    HANDLE_INTERCEPTOR_VA_ARGS(LOG_WARNING);
+
     if (logLevel < LOG_WARNING) return;
 
     std::string s;
@@ -137,6 +178,8 @@ void LogWarning(const char *fmt, ...)
 
 void LogString(std::string message, LogLevel level)
 {
+    HANDLE_INTERCEPTOR(level, message);
+
     if (loggingToBuffer) {
         if (LogBufferContains(message)) return;
         logBuffer.push_back(message);
