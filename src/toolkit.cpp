@@ -1626,7 +1626,7 @@ bool Toolkit::RenderToTimemapFile(const std::string &filename, const std::string
     return true;
 }
 
-int Toolkit::GetPageCount()
+int Toolkit::GetPageCount() const
 {
     return m_doc.GetPageCount();
 }

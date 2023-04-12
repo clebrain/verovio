@@ -200,7 +200,7 @@ public:
      *
      * @return The number of pages
      */
-    int GetPageCount();
+    int GetPageCount() const;
 
     ///@}
 
