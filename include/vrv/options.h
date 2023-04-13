@@ -82,11 +82,27 @@ enum option_SYSTEMDIVIDER { SYSTEMDIVIDER_none = 0, SYSTEMDIVIDER_auto, SYSTEMDI
 
 enum option_SMUFLTEXTFONT { SMUFLTEXTFONT_embedded = 0, SMUFLTEXTFONT_linked, SMUFLTEXTFONT_none };
 
+class OptionDbl;
+class OptionInt;
+class OptionIntMap;
+class OptionString;
+class OptionArray;
+class OptionBool;
+
 //----------------------------------------------------------------------------
 // Option
 //----------------------------------------------------------------------------
 
 enum class OptionsCategory { None, Base, General, Layout, Margins, Midi, Selectors, Full };
+
+#ifdef RUST_LIBRARY
+
+struct OptionStringView {
+    const char *str;
+    size_t length;
+};
+
+#endif
 
 /**
  * This class is a base class of each styling parameter
@@ -122,6 +138,33 @@ public:
     void SetShortOption(char shortOption, bool isCmdOnly);
     char GetShortOption() const { return m_shortOption; }
     bool IsCmdOnly() const { return m_isCmdOnly; }
+
+#ifdef RUST_LIBRARY
+
+    bool SetValueArray(const OptionStringView *values, size_t numValues)
+    {
+        std::vector<std::string> convertedValues;
+        for (size_t i = 0; i < numValues; ++i) {
+            convertedValues.push_back(std::string(values[i].str, values[i].length));
+        }
+        return SetValueArray(convertedValues);
+    }
+
+    OptionDbl *AsDbl();
+    OptionInt *AsInt();
+    OptionIntMap *AsIntMap();
+    OptionString *AsString();
+    OptionArray *AsArray();
+    OptionBool *AsBool();
+
+    const OptionDbl *AsDbl() const;
+    const OptionInt *AsInt() const;
+    const OptionIntMap *AsIntMap() const;
+    const OptionString *AsString() const;
+    const OptionArray *AsArray() const;
+    const OptionBool *AsBool() const;
+
+#endif
 
     /**
      * Return a JSON object for the option
@@ -352,6 +395,19 @@ public:
     void Reset() override;
     bool IsSet() const override;
 
+#ifdef RUST_LIBRARY
+
+    bool SetValue(const OptionStringView *values, size_t numValues)
+    {
+        std::vector<std::string> convertedValues;
+        for (size_t i = 0; i < numValues; ++i) {
+            convertedValues.push_back(std::string(values[i].str, values[i].length));
+        }
+        return SetValue(convertedValues);
+    }
+
+#endif
+
 private:
     std::string GetStr(const std::vector<std::string> &values) const;
 
@@ -543,6 +599,12 @@ public:
 
     void AddOption(Option *option) { m_options.push_back(option); }
 
+#ifdef RUST_LIBRARY
+
+    const void *GetTransmutedOptions() const { return &m_options; }
+
+#endif
+
     const std::vector<Option *> *GetOptions() const { return &m_options; }
 
 public:
@@ -553,6 +615,38 @@ protected:
     std::vector<Option *> m_options;
     OptionsCategory m_category = OptionsCategory::None;
 };
+
+#ifdef RUST_LIBRARY
+
+struct MapOfStrOptionsWrapperPair {
+    void *key;
+    void *value;
+};
+
+//----------------------------------------------------------------------------
+// MapOfStrOptionsWrapper
+//----------------------------------------------------------------------------
+
+class MapOfStrOptionsWrapper {
+public:
+    MapOfStrOptionsWrapper(const MapOfStrOptions &map) : m_begin{ map.begin() }, m_end{ map.end() } {}
+
+    MapOfStrOptionsWrapperPair GetNext()
+    {
+        if (m_begin == m_end) {
+            return { nullptr, nullptr };
+        }
+
+        auto &[key, value] = *(m_begin++);
+        return { const_cast<std::string *>(&key), value };
+    }
+
+private:
+    MapOfStrOptions::const_iterator m_begin;
+    MapOfStrOptions::const_iterator m_end;
+};
+
+#endif
 
 //----------------------------------------------------------------------------
 // Options
@@ -569,6 +663,16 @@ public:
 
     Options(const Options &options);
     Options &operator=(const Options &options);
+
+#ifdef RUST_LIBRARY
+
+    MapOfStrOptionsWrapper GetWrappedItems() const { return MapOfStrOptionsWrapper(m_items); }
+
+    const void *GetTransmutedGrps() const { return &m_grps; }
+
+    const void *GetTransmutedBaseOptions() const;
+
+#endif
 
     const MapOfStrOptions *GetItems() const { return &m_items; }
 

@@ -94,6 +94,70 @@ bool Option::SetValue(const std::string &value)
     return false;
 }
 
+#ifdef RUST_LIBRARY
+
+OptionDbl *Option::AsDbl()
+{
+    return dynamic_cast<vrv::OptionDbl *>(this);
+}
+
+OptionInt *Option::AsInt()
+{
+    return dynamic_cast<vrv::OptionInt *>(this);
+}
+
+OptionIntMap *Option::AsIntMap()
+{
+    return dynamic_cast<vrv::OptionIntMap *>(this);
+}
+
+OptionString *Option::AsString()
+{
+    return dynamic_cast<vrv::OptionString *>(this);
+}
+
+OptionArray *Option::AsArray()
+{
+    return dynamic_cast<vrv::OptionArray *>(this);
+}
+
+OptionBool *Option::AsBool()
+{
+    return dynamic_cast<vrv::OptionBool *>(this);
+}
+
+const OptionDbl *Option::AsDbl() const
+{
+    return dynamic_cast<const vrv::OptionDbl *>(this);
+}
+
+const OptionInt *Option::AsInt() const
+{
+    return dynamic_cast<const vrv::OptionInt *>(this);
+}
+
+const OptionIntMap *Option::AsIntMap() const
+{
+    return dynamic_cast<const vrv::OptionIntMap *>(this);
+}
+
+const OptionString *Option::AsString() const
+{
+    return dynamic_cast<const vrv::OptionString *>(this);
+}
+
+const OptionArray *Option::AsArray() const
+{
+    return dynamic_cast<const vrv::OptionArray *>(this);
+}
+
+const OptionBool *Option::AsBool() const
+{
+    return dynamic_cast<const vrv::OptionBool *>(this);
+}
+
+#endif
+
 jsonxx::Object Option::ToJson() const
 {
     jsonxx::Object opt;
@@ -1939,6 +2003,15 @@ void Options::Register(Option *option, const std::string &key, OptionGrp *grp)
     option->SetKey(key);
     grp->AddOption(option);
 }
+
+#ifdef RUST_LIBRARY
+
+const void *Options::GetTransmutedBaseOptions() const
+{
+    return m_baseOptions.GetOptions();
+}
+
+#endif
 
 jsonxx::Object Options::GetBaseOptGrp()
 {

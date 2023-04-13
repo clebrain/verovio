@@ -13,9 +13,23 @@ use autocxx::prelude::*;
 include_cpp! {
     #include "vrv.h"
     #include "toolkit.h"
+    #include "options.h"
     safety!(unsafe)
-    generate!("vrv::Toolkit")
     generate!("vrv::SetLogInterceptor")
+    generate!("vrv::Toolkit")
+    generate_pod!("vrv::OptionStringView")
+    generate!("vrv::Options")
+    generate_pod!("vrv::MapOfStrOptionsWrapperPair")
+    generate!("vrv::MapOfStrOptionsWrapper")
+    generate!("vrv::OptionsCategory")
+    generate!("vrv::OptionGrp")
+    generate!("vrv::Option")
+    generate!("vrv::OptionDbl")
+    generate!("vrv::OptionInt")
+    generate!("vrv::OptionIntMap")
+    generate!("vrv::OptionString")
+    generate!("vrv::OptionArray")
+    generate!("vrv::OptionBool")
     exclude_utilities!()
 }
 
