@@ -629,7 +629,10 @@ struct MapOfStrOptionsWrapperPair {
 
 class MapOfStrOptionsWrapper {
 public:
-    MapOfStrOptionsWrapper(const MapOfStrOptions &map) : m_begin{ map.begin() }, m_end{ map.end() } {}
+    MapOfStrOptionsWrapper(const MapOfStrOptions &map)
+        : m_begin{ map.begin() }, m_end{ map.end() }, m_numElementsRemaining{ map.size() }
+    {
+    }
 
     MapOfStrOptionsWrapperPair GetNext()
     {
@@ -638,12 +641,16 @@ public:
         }
 
         auto &[key, value] = *(m_begin++);
+        --m_numElementsRemaining;
         return { const_cast<std::string *>(&key), value };
     }
+
+    size_t GetNumElementsRemaining() const { return m_numElementsRemaining; }
 
 private:
     MapOfStrOptions::const_iterator m_begin;
     MapOfStrOptions::const_iterator m_end;
+    size_t m_numElementsRemaining;
 };
 
 #endif
