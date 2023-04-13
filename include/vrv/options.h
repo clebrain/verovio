@@ -668,6 +668,8 @@ public:
 
     MapOfStrOptionsWrapper GetWrappedItems() const { return MapOfStrOptionsWrapper(m_items); }
 
+    const OptionGrp *GetBaseOptionGroup() const { return &m_baseOptions; }
+
     const void *GetTransmutedGrps() const { return &m_grps; }
 
     const void *GetTransmutedBaseOptions() const;
