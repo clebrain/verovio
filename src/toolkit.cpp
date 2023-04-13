@@ -119,6 +119,7 @@ std::string Toolkit::GetResourcePath() const
 bool Toolkit::SetResourcePath(const std::string &path)
 {
     Resources &resources = m_doc.GetResourcesForModification();
+    resources.SetIO(nullptr);
     resources.SetPath(path);
     return resources.InitFonts();
 }
