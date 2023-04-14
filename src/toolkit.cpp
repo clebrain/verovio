@@ -14,6 +14,7 @@
 #include <locale>
 #include <memory>
 #include <regex>
+#include <vector>
 
 //----------------------------------------------------------------------------
 
@@ -1462,6 +1463,26 @@ void Toolkit::GetHumdrum(std::ostream &output)
 {
     output << this->GetHumdrumBuffer();
 }
+
+#ifdef RUST_LIBRARY
+
+std::vector<uint8_t> Toolkit::RenderToMIDIBinary()
+{
+    this->ResetLogBuffer();
+
+    smf::MidiFile outputfile;
+    outputfile.absoluteTicks();
+    m_doc.ExportMIDI(&outputfile);
+    outputfile.sortTracks();
+
+    std::stringstream stream;
+    outputfile.write(stream);
+
+    std::string str = stream.str();
+    return std::vector<uint8_t>(str.begin(), str.end());
+}
+
+#endif
 
 std::string Toolkit::RenderToMIDI()
 {

@@ -365,6 +365,12 @@ public:
      */
     bool RenderToSVGFile(const std::string &filename, int pageNo = 1);
 
+#ifdef RUST_LIBRARY
+
+    std::vector<uint8_t> RenderToMIDIBinary();
+
+#endif
+
     /**
      * Render the document to MIDI.
      *
