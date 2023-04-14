@@ -19,6 +19,7 @@ include_cpp! {
     generate!("vrv::Toolkit")
     generate_pod!("vrv::OptionStringView")
     generate!("vrv::Options")
+    generate!("vrv::OptionsMemberOffsets")
     generate_pod!("vrv::MapOfStrOptionsWrapperPair")
     generate!("vrv::MapOfStrOptionsWrapper")
     generate!("vrv::OptionsCategory")
