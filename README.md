@@ -1,11 +1,6 @@
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
-[![PyPI](https://img.shields.io/pypi/v/verovio)](https://pypi.org/project/verovio/)
-[![PyPI - Wheel](https://img.shields.io/pypi/wheel/verovio)](https://pypi.org/project/verovio/)
-[![AppVeyor status](https://ci.appveyor.com/api/projects/status/121cxhmtwurxffh0?svg=true)](https://ci.appveyor.com/project/LaurentPugin/verovio-r1t6l)
-[![GH Actions status](https://github.com/rism-digital/verovio/workflows/Verovio%20CI%20Build/badge.svg)](https://github.com/rism-digital/verovio/actions?query=workflow%3A%22Verovio+CI+Build%22)
+[![GH Actions status](https://github.com/clebrain/verovio/workflows/Verovio%20CI%20Build/badge.svg)](https://github.com/clebrain/verovio/actions?query=workflow%3A%22Verovio+CI+Build%22)
 
-[![PyPI - Downlaods](https://img.shields.io/pypi/dm/verovio?label=PyPI%20downloads)](https://pypi.org/project/verovio/)
-[![NPM - Downlaods](https://img.shields.io/npm/dm/verovio?label=NPM%20-%20downloads)](https://www.npmjs.com/package/verovio)
 
 Verovio is a fast, portable and lightweight library for engraving [Music Encoding Initiative (MEI)](http://www.music-encoding.org) digital scores into SVG images. Verovio also contains on-the-fly converters to render [Plaine & Easie Code](https://www.iaml.info/plaine-easie-code), [Humdrum](https://www.humdrum.org), [Musedata](https://musedata.org), [MusicXML](https://www.musicxml.com), [EsAC](http://esac-data.org), and [ABC](https://en.wikipedia.org/wiki/ABC_notation) digital scores. 
 
@@ -16,7 +11,7 @@ Verovio is written in standard 2017 C++ and can be compiled as a standalone comm
 
 Verovio uses the [Standard Music Font Layout (SMuFL)](http://www.smufl.org) specification and the font can be changed for personalizing the output.
 
-The project page is https://www.verovio.org. Verovio is available under the LGPL license (see [COPYING](https://github.com/rism-digital/verovio/blob/develop/COPYING) and [COPYING.LESSER](https://github.com/rism-digital/verovio/blob/develop/COPYING.LESSER)).
+The project page is https://www.verovio.org. Verovio is available under the LGPL license (see [COPYING](https://github.com/clebrain/verovio/blob/develop/COPYING) and [COPYING.LESSER](https://github.com/clebrain/verovio/blob/develop/COPYING.LESSER)).
 
 Building and use instructions by environment
 --------------------------------------------
