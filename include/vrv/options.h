@@ -676,6 +676,15 @@ public:
 
     MapOfStrOptionsWrapper GetWrappedItems() const { return MapOfStrOptionsWrapper(m_items); }
 
+    void *GetWrappedItem(const std::string &key) const
+    {
+        MapOfStrOptions::const_iterator it = m_items.find(key);
+        if (it != m_items.end()) {
+            return it->second;
+        }
+        return nullptr;
+    }
+
     const void *GetTransmutedGrps() const { return &m_grps; }
 
     const void *GetTransmutedBaseOptions() const;
