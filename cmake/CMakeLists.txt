@@ -253,7 +253,11 @@ if (BUILD_AS_RUST_LIBRARY)
     function(invoke_autocxx LANGUAGE)
         add_custom_command(
             OUTPUT ${AUTOCXX_GENERATED_${LANGUAGE}_FILES}
-            COMMAND autocxx-gen ARGS
+            COMMAND 
+                ${CMAKE_COMMAND} ARGS -E env
+                # Unset $ENV{TARGET} for iOS
+                $<IF:$<OR:$<STREQUAL:$ENV{TARGET},aarch64-apple-ios>,$<STREQUAL:$ENV{TARGET},aarch64-apple-ios-sim>,$<STREQUAL:$ENV{TARGET},x86_64-apple-ios>,$<STREQUAL:$ENV{TARGET},x86_64-apple-ios-sim>>,--unset=TARGET,DUMMY=DUMMY>
+                autocxx-gen
                 --outdir ${AUTOCXX_${LANGUAGE}_OUTPUT_DIR}
                 ${AUTOCXX_INC_ARGUMENTS}
                 ${AUTOCXX_${LANGUAGE}_ARGUMENTS}
