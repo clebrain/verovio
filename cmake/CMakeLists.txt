@@ -1,4 +1,11 @@
-cmake_minimum_required(VERSION 3.9)
+if (ANDROID)
+    # See the following for detailed information:
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/21772
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/8170
+    cmake_minimum_required(VERSION 3.26)
+else()
+    cmake_minimum_required(VERSION 3.9)
+endif()
 
 project(Verovio)
 
@@ -192,10 +199,6 @@ if (BUILD_AS_RUST_LIBRARY)
             message(FATAL_ERROR "IPO is not IPO_SUPPORTED: ${IPO_ERROR}")
         endif()
         set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-        if (ANDROID)
-            # https://gitlab.kitware.com/cmake/cmake/-/issues/21772
-            string(REGEX REPLACE "-fuse-ld=gold" "" CMAKE_CXX_LINK_OPTIONS_IPO ${CMAKE_CXX_LINK_OPTIONS_IPO})
-        endif()
     endif()
 
     if (WIN32)
