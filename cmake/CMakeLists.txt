@@ -242,14 +242,24 @@ if (BUILD_AS_RUST_LIBRARY)
         )
     endforeach()
 
-    set(
-        AUTOCXX_CXX_ARGUMENTS
-        --cpp-extension cpp
-        --gen-cpp
-        --generate-cxx-h
-        --cxx-impl-annotations ${AUTOCXX_GEN_ANNOTATIONS}
-        --generate-exact ${AUTOCXX_NUM_GENERATED_FILES}
-    )
+    if (RUST_LIBRARY_STATIC)
+        set(
+            AUTOCXX_CXX_ARGUMENTS
+            --cpp-extension cpp
+            --gen-cpp
+            --generate-cxx-h
+            --generate-exact ${AUTOCXX_NUM_GENERATED_FILES}
+        )
+    else()
+        set(
+            AUTOCXX_CXX_ARGUMENTS
+            --cpp-extension cpp
+            --gen-cpp
+            --generate-cxx-h
+            --cxx-impl-annotations ${AUTOCXX_GEN_ANNOTATIONS}
+            --generate-exact ${AUTOCXX_NUM_GENERATED_FILES}
+        )
+    endif()
     set(
         AUTOCXX_RUST_ARGUMENTS
         --gen-rs-include
@@ -284,9 +294,9 @@ if (BUILD_AS_RUST_LIBRARY)
     add_custom_target(verovio-rs-generated DEPENDS ${AUTOCXX_GENERATED_RUST_FILES})
     add_definitions(-DRUST_LIBRARY)
     if (RUST_LIBRARY_STATIC)
-        add_library(verovio ${AUTOCXX_GENERATED_CXX_FILES} ${all_SRC})
+        add_library(verovio ${all_SRC} ${AUTOCXX_GENERATED_CXX_FILES})
     else()
-        add_library(verovio SHARED ${AUTOCXX_GENERATED_CXX_FILES} ${all_SRC})
+        add_library(verovio SHARED ${all_SRC} ${AUTOCXX_GENERATED_CXX_FILES})
     endif()
     add_dependencies(verovio verovio-rs-generated)
 
