@@ -254,6 +254,12 @@ public:
      */
     void PrintOptionUsage(const std::string &category, std::ostream &output) const;
 
+#ifdef RUST_LIBRARY
+
+    std::string GetOptionUsage(const std::string &category) const;
+
+#endif
+
     /**
      * Get all usage for all option categories as string.
      */

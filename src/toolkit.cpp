@@ -14,6 +14,7 @@
 #include <locale>
 #include <memory>
 #include <regex>
+#include <sstream>
 #include <vector>
 
 //----------------------------------------------------------------------------
@@ -1262,6 +1263,17 @@ void Toolkit::PrintOptionUsage(const std::string &category, std::ostream &output
         }
     }
 }
+
+#ifdef RUST_LIBRARY
+
+std::string Toolkit::GetOptionUsage(const std::string &category) const
+{
+    std::ostringstream oss;
+    PrintOptionUsage(category, oss);
+    return oss.str();
+}
+
+#endif
 
 std::string Toolkit::GetOptionUsageString() const
 {
