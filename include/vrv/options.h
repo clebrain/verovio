@@ -89,6 +89,7 @@ class OptionIntMap;
 class OptionString;
 class OptionArray;
 class OptionBool;
+class OptionJson;
 
 //----------------------------------------------------------------------------
 // Option
@@ -157,6 +158,7 @@ public:
     OptionString *AsString();
     OptionArray *AsArray();
     OptionBool *AsBool();
+    OptionJson *AsJson();
 
     const OptionDbl *AsDbl() const;
     const OptionInt *AsInt() const;
@@ -164,6 +166,7 @@ public:
     const OptionString *AsString() const;
     const OptionArray *AsArray() const;
     const OptionBool *AsBool() const;
+    const OptionJson *AsJson() const;
 
 #endif
 

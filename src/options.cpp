@@ -126,6 +126,11 @@ OptionBool *Option::AsBool()
     return dynamic_cast<vrv::OptionBool *>(this);
 }
 
+OptionJson *Option::AsJson()
+{
+    return dynamic_cast<vrv::OptionJson *>(this);
+}
+
 const OptionDbl *Option::AsDbl() const
 {
     return dynamic_cast<const vrv::OptionDbl *>(this);
@@ -154,6 +159,11 @@ const OptionArray *Option::AsArray() const
 const OptionBool *Option::AsBool() const
 {
     return dynamic_cast<const vrv::OptionBool *>(this);
+}
+
+const OptionJson *Option::AsJson() const
+{
+    return dynamic_cast<const vrv::OptionJson *>(this);
 }
 
 #endif
