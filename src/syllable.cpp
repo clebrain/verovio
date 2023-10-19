@@ -16,6 +16,8 @@
 
 //----------------------------------------------------------------------------
 
+#include "divline.h"
+#include "functor.h"
 #include "neume.h"
 #include "syl.h"
 #include "text.h"
@@ -50,6 +52,15 @@ bool Syllable::IsSupportedChild(Object *child)
     else if (child->Is(NEUME)) {
         assert(dynamic_cast<Neume *>(child));
     }
+    else if (child->Is(DIVLINE)) {
+        assert(dynamic_cast<DivLine *>(child));
+    }
+    else if (child->Is(ACCID)) {
+        assert(dynamic_cast<Accid *>(child));
+    }
+    else if (child->Is(CLEF)) {
+        assert(dynamic_cast<Clef *>(child));
+    }
     else {
         return false;
     }
@@ -81,6 +92,26 @@ bool Syllable::MarkupAddSyl()
         return true;
     }
     return false;
+}
+
+FunctorCode Syllable::Accept(Functor &functor)
+{
+    return functor.VisitSyllable(this);
+}
+
+FunctorCode Syllable::Accept(ConstFunctor &functor) const
+{
+    return functor.VisitSyllable(this);
+}
+
+FunctorCode Syllable::AcceptEnd(Functor &functor)
+{
+    return functor.VisitSyllableEnd(this);
+}
+
+FunctorCode Syllable::AcceptEnd(ConstFunctor &functor) const
+{
+    return functor.VisitSyllableEnd(this);
 }
 
 } // namespace vrv

@@ -108,7 +108,7 @@ public:
      *
      * @return the version number as a string
      */
-    std::string GetVersion();
+    std::string GetVersion() const;
 
     /**
      * Reset the seed used to generate MEI \@xml:id attribute values
@@ -248,6 +248,16 @@ public:
      * Reset all options to default values
      */
     void ResetOptions();
+
+    /**
+     * Print formatted option usage for specific category (with max/min/default values) to output stream.
+     */
+    void PrintOptionUsage(const std::string &category, std::ostream &output) const;
+
+    /**
+     * Get all usage for all option categories as string.
+     */
+    std::string GetOptionUsageString() const;
 
     /**
      * Set the scale option.
@@ -418,6 +428,13 @@ public:
     std::string RenderToTimemap(const std::string &jsonOptions = "");
 
     /**
+     * Render a document's expansionMap, if existing
+     *
+     * @return The expansionMap as a string
+     */
+    std::string RenderToExpansionMap();
+
+    /**
      * Render a document to timemap and save it to the file.
      *
      * @remark nojs
@@ -427,6 +444,15 @@ public:
      * @return True if the file was successfully written
      */
     bool RenderToTimemapFile(const std::string &filename, const std::string &jsonOptions = "");
+
+    /**
+     * Render a document's expansionMap and save it to a file.
+     *
+     * @remark nojs
+     *
+     * @param filename The output filename
+     */
+    bool RenderToExpansionMapFile(const std::string &filename);
 
     //@}
 
@@ -487,9 +513,10 @@ public:
     /**
      * Get the MEI as a string.
      *
-     * @param jsonOptions A stringified JSON object with the output options
+     * @param jsonOptions A stringified JSON object with the output options;
      * pageNo: integer; (1-based), all pages if none (or 0) specified;
      * scoreBased: true or false; true by default;
+     * basic: true or false; false by default;
      * removeIds: true or false; false by default - remove all \@xml:id not used in the data;
      */
     std::string GetMEI(const std::string &jsonOptions = "");
@@ -737,6 +764,11 @@ protected:
      * Identify the input file type for auto loading of input data
      */
     FileFormat IdentifyInputFrom(const std::string &data);
+
+    /**
+     * Print formatted option usage for specific option to output stream.
+     */
+    void PrintOptionUsageOutput(const vrv::Option *option, std::ostream &output) const;
 
     /**
      * Resets the vrv::logBuffer.

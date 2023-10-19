@@ -45,7 +45,7 @@ void View::DrawBeam(DeviceContext *dc, LayerElement *element, Layer *layer, Staf
     // initialization
 
     // Should we assert this at the beginning?
-    if (beam->HasEmptyList(beam)) {
+    if (beam->HasEmptyList()) {
         return;
     }
 
@@ -95,7 +95,7 @@ void View::DrawFTrem(DeviceContext *dc, LayerElement *element, Layer *layer, Sta
     // initialization
 
     // Should we assert this at the beginning?
-    if (fTrem->HasEmptyList(fTrem)) {
+    if (fTrem->HasEmptyList()) {
         return;
     }
     const ArrayOfBeamElementCoords *beamElementCoords = fTrem->GetElementCoords();
@@ -170,9 +170,9 @@ void View::DrawFTremSegment(DeviceContext *dc, Staff *staff, FTrem *fTrem)
     int space = m_doc->GetDrawingBeamWidth(staff->m_drawingStaffSize, fTrem->m_cueSize);
     // for non-stem notes the bar should be shortened
     if (dur < DUR_2) {
-        x1 += 2 * space;
+        if (fTrem->m_drawingPlace == BEAMPLACE_below) x1 += 2 * space;
         y1 += 2 * space * fTrem->m_beamSegment.m_beamSlope;
-        x2 -= 2 * space;
+        if (fTrem->m_drawingPlace == BEAMPLACE_above) x2 -= 2 * space;
         y2 -= 2 * space * fTrem->m_beamSegment.m_beamSlope;
         // floating bars make no sense here
         fullBars = allBars;

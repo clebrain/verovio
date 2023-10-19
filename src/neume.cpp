@@ -18,7 +18,7 @@
 #include "doc.h"
 #include "editorial.h"
 #include "elementpart.h"
-#include "functorparams.h"
+#include "functor.h"
 #include "glyph.h"
 #include "layer.h"
 #include "nc.h"
@@ -71,14 +71,30 @@ bool Neume::IsSupportedChild(Object *child)
 
 int Neume::GetPosition(const LayerElement *element) const
 {
-    this->GetList(this);
-    int position = this->GetListIndex(element);
-    return position;
+    this->GetList();
+    return this->GetListIndex(element);
+}
+
+int Neume::GetLigatureCount(int position)
+{
+    int ligCount = 0;
+    this->GetList();
+    for (int pos = 0; pos <= position; pos++) {
+        Object *posObj = this->GetChild(pos);
+        if (posObj != NULL) {
+            Nc *posNc = dynamic_cast<Nc *>(posObj);
+            assert(posNc);
+            if (posNc->GetLigated() == BOOLEAN_true) { // first part of the ligature
+                ligCount += 1;
+            }
+        }
+    }
+    return ligCount;
 }
 
 bool Neume::IsLastInNeume(const LayerElement *element) const
 {
-    const int size = this->GetListSize(this);
+    const int size = this->GetListSize();
     int position = this->GetPosition(element);
 
     // This method should be called only if the note is part of a neume
@@ -216,6 +232,26 @@ PitchInterface *Neume::GetLowestPitch()
         }
     }
     return min;
+}
+
+FunctorCode Neume::Accept(Functor &functor)
+{
+    return functor.VisitNeume(this);
+}
+
+FunctorCode Neume::Accept(ConstFunctor &functor) const
+{
+    return functor.VisitNeume(this);
+}
+
+FunctorCode Neume::AcceptEnd(Functor &functor)
+{
+    return functor.VisitNeumeEnd(this);
+}
+
+FunctorCode Neume::AcceptEnd(ConstFunctor &functor) const
+{
+    return functor.VisitNeumeEnd(this);
 }
 
 } // namespace vrv

@@ -21,9 +21,9 @@ namespace vrv {
  * This class models the MEI <bTrem> element.
  */
 class BTrem : public LayerElement,
-              public AttBTremLog,
               public AttNumbered,
               public AttNumberPlacement,
+              public AttTremForm,
               public AttTremMeasured {
 public:
     /**
@@ -49,24 +49,31 @@ public:
      */
     data_STEMMODIFIER GetDrawingStemMod() const override;
 
-    //----------//
-    // Functors //
-    //----------//
-
-    /**
-     * See Object::GenerateMIDI
-     */
-    int GenerateMIDI(FunctorParams *functorParams) override;
-
-private:
     /**
      * Calculate the duration of an individual note in a measured tremolo
      */
     data_DURATION CalcIndividualNoteDuration() const;
 
+    //----------//
+    // Functors //
+    //----------//
+
+    /**
+     * Interface for class functor visitation
+     */
+    ///@{
+    FunctorCode Accept(Functor &functor) override;
+    FunctorCode Accept(ConstFunctor &functor) const override;
+    FunctorCode AcceptEnd(Functor &functor) override;
+    FunctorCode AcceptEnd(ConstFunctor &functor) const override;
+    ///@}
+
+private:
+    //
 public:
     //
 private:
+    //
 };
 
 } // namespace vrv
