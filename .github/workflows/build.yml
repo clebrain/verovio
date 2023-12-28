@@ -5,8 +5,9 @@
 name: Build_Dispatcher
 on:
   push:
-    branches: [feat/rust-wrapper, feat/ci]
-
+    tags:        
+      - '**'           
+      
 jobs:
   dispatch:
     name: Dispatch
