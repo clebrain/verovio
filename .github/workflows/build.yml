@@ -24,4 +24,4 @@ jobs:
             curl -H "Accept: application/vnd.github.everest-preview+json" \
             -H "Authorization: token ${{ secrets.DISPATCH_TOKEN }}" \
             --request POST \
-            --data '{"event_type": "build_complete", "client_payload": { "COMMIT": ${{ github.ref_name }} }}' https://api.github.com/repos/${{ matrix.repo }}/dispatches
+            --data '{"event_type": "build_complete", "client_payload": { "COMMIT": "${{ github.ref_name }}" }}' https://api.github.com/repos/${{ matrix.repo }}/dispatches
