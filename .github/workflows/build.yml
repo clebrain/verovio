@@ -1,0 +1,26 @@
+
+# 클레브레인 _ 피아노키위즈 전용 ACTION 입니다.
+# ? Author 권희준 ( low.heejun@clebrain.com / GwonHeeJun )
+
+name: Build_Dispatcher
+on:
+  push:
+    branches: [feat/rust-wrapper, feat/ci]
+
+jobs:
+  dispatch:
+    name: Dispatch
+    env:
+      PACKAGES_TO_UPGRADE: ${{ needs.run_publish.outputs.packages }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repo: ['clebrain/verovio-rs']
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch to workflows
+        run: |
+            curl -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Authorization: token ${{ secrets.DISPATCH_TOKEN }}" \
+            --request POST \
+            --data '{"event_type": "build_complete", "client_payload": { "version": "1.0.0" }}' https://api.github.com/repos/${{ matrix.repo }}/dispatches
