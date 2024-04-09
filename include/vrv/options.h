@@ -95,7 +95,7 @@ class OptionJson;
 // Option
 //----------------------------------------------------------------------------
 
-enum class OptionsCategory { None, Base, General, Layout, Margins, Midi, Selectors, Full };
+enum class OptionsCategory { None, Base, General, Layout, Mensural, Margins, Midi, Selectors, Full };
 
 #ifdef RUST_LIBRARY
 
@@ -750,8 +750,6 @@ public:
     OptionBool m_incip;
     OptionBool m_justifyVertically;
     OptionBool m_landscape;
-    OptionBool m_ligatureAsBracket;
-    OptionBool m_mensuralToMeasure;
     OptionDbl m_minLastJustification;
     OptionBool m_mmOutput;
     OptionBool m_moveScoreDefinitionToStaff;
@@ -949,6 +947,14 @@ public:
 
     OptionBool m_midiNoCue;
     OptionDbl m_midiTempoAdjustment;
+
+    /**
+     * Mensural
+     */
+    OptionGrp m_mensural;
+
+    OptionBool m_ligatureAsBracket;
+    OptionBool m_mensuralToMeasure;
 
     /**
      * Deprecated options
