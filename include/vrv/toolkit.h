@@ -84,7 +84,7 @@ public:
     bool SetResourceIO(const RawResourceIO::FunctionTable *table, void *context);
 
     /**
-     * Set the resource path for the Toolkit instance.
+     * Set the resource path for the Toolkit instance and any extra fonts
      *
      * This method needs to be called if the constructor had initFont=false or if the resource path
      * needs to be changed.
@@ -752,6 +752,14 @@ public:
     int GetOutputTo() { return m_outputTo; }
 
     /**
+     * Setting the global locale.
+     */
+    ///@{
+    void SetLocale();
+    void ResetLocale();
+    ///@}
+
+    /**
      * Measuring runtime.
      *
      * @ingroup nodoc
@@ -808,6 +816,8 @@ private:
     FileFormat m_outputTo;
 
     Options *m_options;
+
+    std::optional<std::locale> m_previousLocale;
 
     /**
      * The C buffer string.

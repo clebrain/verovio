@@ -12,7 +12,9 @@
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <optional>
+#include <sstream>
 
 //----------------------------------------------------------------------------
 
@@ -40,7 +42,6 @@ Glyph::Glyph()
     m_codeStr = "[unset]";
     m_path = "[unset]";
     m_isFallback = false;
-    m_resourceIO = nullptr;
 }
 
 Glyph::Glyph(std::string path, std::string codeStr)
@@ -53,7 +54,6 @@ Glyph::Glyph(std::string path, std::string codeStr)
     m_unitsPerEm = 20480;
     m_codeStr = codeStr;
     m_isFallback = false;
-    m_resourceIO = nullptr;
 
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(path.c_str());
@@ -90,7 +90,6 @@ Glyph::Glyph(int unitsPerEm)
     m_unitsPerEm = unitsPerEm * 10;
     m_codeStr = "[unset]";
     m_path = "[unset]";
-    m_resourceIO = nullptr;
 }
 
 Glyph::~Glyph() {}
@@ -150,18 +149,17 @@ const Point *Glyph::GetAnchor(SMuFLGlyphAnchor anchor) const
     return &m_anchors.at(anchor);
 }
 
-pugi::xml_parse_result Glyph::Load(pugi::xml_document &sourceDoc) const
+std::string Glyph::GetXML() const
 {
-    if (m_resourceIO) {
-        std::optional<std::string> source = m_resourceIO->QueryGlyph(m_fontName, m_codeStr);
-        if (source) {
-            return sourceDoc.load_buffer(source->c_str(), source->size());
-        }
-        return pugi::xml_parse_result();
+    if (!m_xml.empty()) {
+        return m_xml;
     }
-
-    std::ifstream source(GetPath());
-    return sourceDoc.load(source);
+    else {
+        std::ifstream fstream(m_path);
+        std::stringstream sstream;
+        sstream << fstream.rdbuf();
+        return sstream.str();
+    }
 }
 
 } // namespace vrv

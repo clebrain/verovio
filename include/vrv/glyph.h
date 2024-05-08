@@ -126,14 +126,16 @@ public:
     const Point *GetAnchor(SMuFLGlyphAnchor anchor) const;
 
     /**
-     * @name Setter for the Resource IO
+     * Set the XML (content) of the glyph.
+     * This is used only for glyph added from zip archive custom fonts.
      */
-    void SetResourceIO(ResourceIO *resourceIO) { m_resourceIO = resourceIO; }
+    void SetXML(const std::string &xml) { m_xml = xml; }
 
     /**
-     * Loads the corresponding XML file
+     * Return the XML (content) of the glyph.
+     * Return the stored XML or load it from the path.
      */
-    pugi::xml_parse_result Load(pugi::xml_document &sourceDoc) const;
+    std::string GetXML() const;
 
 private:
     //
@@ -155,12 +157,12 @@ private:
     std::string m_codeStr;
     /** Path to the glyph XML file */
     std::string m_path;
+    /** XML of the content for files loaded from zip archive custom font */
+    std::string m_xml;
     /** A map of the available anchors */
     std::map<SMuFLGlyphAnchor, Point> m_anchors;
     /** A flag indicating it is a fallback */
     bool m_isFallback;
-    /** The ResourceIO owned by Resources responsible for loading glyph XML files */
-    ResourceIO *m_resourceIO;
 };
 
 } // namespace vrv

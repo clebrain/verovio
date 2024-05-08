@@ -9,12 +9,14 @@
 
 //----------------------------------------------------------------------------
 
+#include <atomic>
 #include <cassert>
 #include <cmath>
 #include <codecvt>
 #include <cstdlib>
 #include <iostream>
 #include <locale>
+#include <memory>
 #include <regex>
 #include <sstream>
 #include <vector>
@@ -54,13 +56,13 @@
 
 #ifdef RUST_LIBRARY
 #define HANDLE_INTERCEPTOR(level, message)                                                                             \
-    if (auto interceptor = globalLogInterceptor.load(std::memory_order_acquire)) {                                     \
+    if (auto interceptor = globalLogInterceptor.load(std::memory_order::acquire)) {                                    \
         interceptor((message), (level));                                                                               \
         return;                                                                                                        \
     }
 
 #define HANDLE_INTERCEPTOR_VA_ARGS(level)                                                                              \
-    if (auto interceptor = globalLogInterceptor.load(std::memory_order_acquire)) {                                     \
+    if (auto interceptor = globalLogInterceptor.load(std::memory_order::acquire)) {                                    \
         va_list args;                                                                                                  \
         va_start(args, fmt);                                                                                           \
         interceptor(StringFormatVariable(fmt, args), (level));                                                         \
@@ -99,7 +101,7 @@ std::atomic<LogInterceptor> globalLogInterceptor;
 
 void SetLogInterceptor(void *interceptor)
 {
-    globalLogInterceptor.store(reinterpret_cast<LogInterceptor>(interceptor), std::memory_order::memory_order_release);
+    globalLogInterceptor.store(reinterpret_cast<LogInterceptor>(interceptor), std::memory_order::release);
 }
 
 #endif
