@@ -32,6 +32,7 @@ include_cpp! {
     generate!("vrv::OptionArray")
     generate!("vrv::OptionBool")
     exclude_utilities!()
+    exclude_impls!()
 }
 
 // Must be aligned with macro constants in vrvdef.h
