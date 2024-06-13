@@ -29,6 +29,7 @@ option(NO_RUNTIME               "Disable runtime clock support"                O
 option(BUILD_AS_LIBRARY         "Build Verovio as library"                     OFF)
 option(BUILD_AS_RUST_LIBRARY    "Build Verovio as library for Rust"            OFF)
 option(RUST_LIBRARY_STATIC      "Build Verovio as static library for Rust"     OFF)
+option(RUST_LIBRARY_FRAMEWORK   "Build Verovio as framework for Rust"          OFF)
 option(BUILD_AS_ANDROID_LIBRARY "Build Verovio as library for Android"         OFF)
 option(USE_PAE_OLD_PARSER       "Use old PAE parser"                           OFF)
 
@@ -301,6 +302,16 @@ if (BUILD_AS_RUST_LIBRARY)
     endif()
     add_dependencies(verovio verovio-rs-generated)
 
+    if (RUST_LIBRARY_FRAMEWORK)
+        set_target_properties(
+            verovio PROPERTIES 
+            FRAMEWORK TRUE
+            MACOSX_FRAMEWORK_IDENTIFIER com.clebrain.Verovio
+            MACOSX_FRAMEWORK_BUNDLE_VERSION 4.2.0
+            MACOSX_FRAMEWORK_SHORT_VERSION_STRING 4.2.0
+        )
+    endif()
+
 elseif (BUILD_AS_LIBRARY OR  BUILD_AS_ANDROID_LIBRARY)
     message(STATUS "***** Building Verovio as shared library *****")
     if(WIN32)
@@ -382,6 +393,8 @@ install(TARGETS verovio
         LIBRARY DESTINATION lib
         # for static libraries
         ARCHIVE DESTINATION lib
+        # for frameworks
+        FRAMEWORK DESTINATION lib
         # public headers
         INCLUDES DESTINATION include
 )
