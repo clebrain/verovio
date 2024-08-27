@@ -36,8 +36,8 @@ include_cpp! {
 }
 
 // Must be aligned with macro constants in vrvdef.h
-pub const VERSION_MAJOR: i32 = 3;
-pub const VERSION_MINOR: i32 = 15;
+pub const VERSION_MAJOR: i32 = 4;
+pub const VERSION_MINOR: i32 = 2;
 pub const VERSION_REVISION: i32 = 0;
 pub const VERSION_DEV: bool = false;
 
