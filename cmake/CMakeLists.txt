@@ -318,7 +318,7 @@ if (BUILD_AS_RUST_LIBRARY)
         )
     endif()
 
-elseif (BUILD_AS_LIBRARY OR  BUILD_AS_ANDROID_LIBRARY)
+elseif (BUILD_AS_LIBRARY OR BUILD_AS_ANDROID_LIBRARY)
     message(STATUS "***** Building Verovio as shared library *****")
     if(WIN32)
 		add_definitions(-DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS)
@@ -390,6 +390,7 @@ endif()
 if (BUILD_AS_ANDROID_LIBRARY)
     find_library(log-lib log)
     target_link_libraries(verovio ${log-lib})
+    target_link_options(verovio PUBLIC "-Wl,-z,max-page-size=16384")
 endif()
 
 install(TARGETS verovio
