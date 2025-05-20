@@ -32,6 +32,7 @@
 #include "iomei.h"
 #include "iomusxml.h"
 #include "iopae.h"
+#include "iovolpiano.h"
 #include "layer.h"
 #include "measure.h"
 #include "nc.h"
@@ -73,6 +74,8 @@ Toolkit::Toolkit(bool initFont)
 
     m_humdrumBuffer = NULL;
     m_cString = NULL;
+
+    m_cerrOriginalBuf = NULL;
 
     if (initFont) {
         Resources &resources = m_doc.GetResourcesForModification();
@@ -213,6 +216,9 @@ bool Toolkit::SetInputFrom(std::string const &inputFrom)
     else if (inputFrom == "darms") {
         m_inputFrom = DARMS;
     }
+    else if (inputFrom == "volpiano") {
+        m_inputFrom = VOLPIANO;
+    }
     else if ((inputFrom == "humdrum") || (inputFrom == "hum")) {
         m_inputFrom = HUMDRUM;
     }
@@ -307,10 +313,16 @@ FileFormat Toolkit::IdentifyInputFrom(const std::string &data)
         return UNKNOWN;
     }
     if (initial.find("\n!!") != std::string::npos) {
+        // Case where there are empty lines before content in Humdrum files.
         return HUMDRUM;
     }
     if (initial.find("\n**") != std::string::npos) {
+        // Case where there are empty lines before content in Humdrum files.
         return HUMDRUM;
+    }
+    if (initial.find("\nCUT[") != std::string::npos) {
+        // Title record for a melody in EsAC format.
+        return ESAC;
     }
 
     // Assume that the input is MEI if other input types were not detected.
@@ -320,6 +332,8 @@ FileFormat Toolkit::IdentifyInputFrom(const std::string &data)
 
 bool Toolkit::LoadFile(const std::string &filename)
 {
+    this->ResetLogBuffer();
+
     if (this->IsUTF16(filename)) {
         return this->LoadUTF16File(filename);
     }
@@ -341,7 +355,7 @@ bool Toolkit::LoadFile(const std::string &filename)
     std::string content(fileSize, 0);
     in.read(&content[0], fileSize);
 
-    return this->LoadData(content);
+    return this->LoadData(content, false);
 }
 
 bool Toolkit::IsUTF16(const std::string &filename)
@@ -402,7 +416,7 @@ bool Toolkit::LoadUTF16File(const std::string &filename)
     std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> convert;
     std::string utf8line = convert.to_bytes(u16data);
 
-    return this->LoadData(utf8line);
+    return this->LoadData(utf8line, false);
 }
 
 bool Toolkit::IsZip(const std::string &filename)
@@ -447,9 +461,10 @@ bool Toolkit::LoadZipFile(const std::string &filename)
 
 bool Toolkit::LoadZipData(const std::vector<unsigned char> &bytes)
 {
+    this->ResetLogBuffer();
 #ifndef NO_MXL_SUPPORT
     ZipFileReader zipFileReader;
-    zipFileReader.Load(bytes);
+    zipFileReader.LoadBytes(bytes);
 
     const std::string metaInf = "META-INF/container.xml";
     if (!zipFileReader.HasFile(metaInf)) {
@@ -465,7 +480,7 @@ bool Toolkit::LoadZipData(const std::vector<unsigned char> &bytes)
 
     if (!filename.empty()) {
         LogInfo("Loading file '%s' in the archive", filename.c_str());
-        return this->LoadData(zipFileReader.ReadTextFile(filename));
+        return this->LoadData(zipFileReader.ReadTextFile(filename), false);
     }
     else {
         LogError("No file to load found in the archive");
@@ -491,8 +506,17 @@ bool Toolkit::LoadZipDataBuffer(const unsigned char *data, int length)
 
 bool Toolkit::LoadData(const std::string &data)
 {
+    return this->LoadData(data, true);
+}
+
+bool Toolkit::LoadData(const std::string &data, bool resetLogBuffer)
+{
     std::string newData;
     Input *input = NULL;
+
+    if (resetLogBuffer) {
+        this->ResetLogBuffer();
+    }
 
     m_doc.m_expansionMap.Reset();
 
@@ -533,6 +557,9 @@ bool Toolkit::LoadData(const std::string &data)
         LogError("DARMS import is not supported in this build.");
         return false;
 #endif
+    }
+    else if (inputFormat == VOLPIANO) {
+        input = new VolpianoInput(&m_doc);
     }
 #ifndef NO_HUMDRUM_SUPPORT
     else if (inputFormat == HUMDRUM) {
@@ -609,7 +636,14 @@ bool Toolkit::LoadData(const std::string &data)
         pugi::xml_document xmlfile;
         xmlfile.load_string(data.c_str());
         stringstream conversion;
+
+        LogRedirectStart();
         bool status = converter.convert(conversion, xmlfile);
+        LogRedirectStop();
+        if (!status) {
+            LogWarning("Problem converting MusicXML to Humdrum (see warning above this line for possible reasons");
+        }
+
         if (!status) {
             LogError("Error converting MusicXML data");
             return false;
@@ -657,7 +691,14 @@ bool Toolkit::LoadData(const std::string &data)
         // This is the indirect converter from MuseData to MEI using iohumdrum:
         hum::Tool_musedata2hum converter;
         stringstream conversion;
+
+        LogRedirectStart();
         bool status = converter.convertString(conversion, data);
+        LogRedirectStop();
+        if (!status) {
+            LogWarning("Problem converting MuseData to Humdrum (see warning above this line for possible reasons");
+        }
+
         if (!status) {
             LogError("Error converting MuseData data");
             return false;
@@ -684,8 +725,15 @@ bool Toolkit::LoadData(const std::string &data)
     else if (inputFormat == ESAC) {
         // This is the indirect converter from EsAC to MEI using iohumdrum:
         hum::Tool_esac2hum converter;
-        stringstream conversion;
+        std::stringstream conversion;
+
+        LogRedirectStart();
         bool status = converter.convert(conversion, data);
+        LogRedirectStop();
+        if (!status) {
+            LogWarning("Problem converting EsAC to Humdrum (see warning above this line for possible reasons");
+        }
+
         if (!status) {
             LogError("Error converting EsAC data");
             return false;
@@ -1349,6 +1397,7 @@ std::string Toolkit::GetElementAttr(const std::string &xmlId)
     }
     // If not found again, try looking in the layer staffdefs
     if (!element) {
+        // This will also look in the score/scoreDef
         FindElementInLayerStaffDefFunctor findElementInLayerStaffDef(xmlId);
         // Check drawing page elements first
         if (m_doc.GetDrawingPage()) {
@@ -1439,6 +1488,7 @@ std::string Toolkit::GetLog()
     for (const std::string &logStr : logBuffer) {
         str += logStr;
     }
+    this->ResetLogBuffer();
     return str;
 }
 
@@ -1456,6 +1506,35 @@ void Toolkit::ResetXmlIdSeed(int seed)
 void Toolkit::ResetLogBuffer()
 {
     logBuffer.clear();
+}
+
+void Toolkit::LogRedirectStart()
+{
+    if (m_cerrOriginalBuf) {
+        vrv::LogError("In Toolkit::LogRedirectStart: Only one log redirect can be active at a time.");
+        return;
+    }
+    if (!m_cerrCaptured.str().empty()) {
+        vrv::LogWarning("In Toolkit::LogRedirectStart: Log capture buffer not empty, sending current contents to "
+                        "LogWarning and resetting.");
+        vrv::LogWarning(m_cerrCaptured.str().c_str());
+        m_cerrCaptured.str("");
+    }
+    m_cerrOriginalBuf = std::cerr.rdbuf();
+    std::cerr.rdbuf(m_cerrCaptured.rdbuf());
+}
+
+void Toolkit::LogRedirectStop()
+{
+    if (!m_cerrCaptured.str().empty()) {
+        vrv::LogWarning(m_cerrCaptured.str().c_str());
+        m_cerrCaptured.str("");
+    }
+
+    if (m_cerrOriginalBuf) {
+        std::cerr.rdbuf(m_cerrOriginalBuf);
+        m_cerrOriginalBuf = NULL;
+    }
 }
 
 void Toolkit::RedoLayout(const std::string &jsonOptions)
@@ -1549,7 +1628,7 @@ bool Toolkit::RenderToDeviceContext(int pageNo, DeviceContext *deviceContext)
         std::swap(height, width);
     }
 
-    double userScale = m_view.GetPPUFactor() * m_options->m_scale.GetValue() / 100;
+    double userScale = m_options->m_scale.GetValue() / 100.0;
     assert(userScale != 0.0);
 
     if (m_options->m_scaleToPageSize.GetValue()) {
@@ -1561,6 +1640,7 @@ bool Toolkit::RenderToDeviceContext(int pageNo, DeviceContext *deviceContext)
     deviceContext->SetUserScale(userScale, userScale);
     deviceContext->SetWidth(width);
     deviceContext->SetHeight(height);
+    deviceContext->SetViewBoxFactor(m_view.GetPPUFactor());
 
     if (m_doc.IsFacs()) {
         deviceContext->SetWidth(m_doc.GetFacsimile()->GetMaxX());
@@ -1575,7 +1655,7 @@ bool Toolkit::RenderToDeviceContext(int pageNo, DeviceContext *deviceContext)
 
 std::string Toolkit::RenderData(const std::string &data, const std::string &jsonOptions)
 {
-    if (this->SetOptions(jsonOptions) && this->LoadData(data)) return this->RenderToSVG(1);
+    if (this->SetOptions(jsonOptions) && this->LoadData(data, false)) return this->RenderToSVG(1);
 
     // Otherwise just return an empty string.
     return "";
@@ -2069,7 +2149,14 @@ const char *Toolkit::GetHumdrumBuffer()
         infile.load_string(meidata.c_str());
         stringstream out;
         hum::Tool_mei2hum converter;
-        converter.convert(out, infile);
+
+        LogRedirectStart();
+        bool status = converter.convert(out, infile);
+        LogRedirectStop();
+        if (!status) {
+            LogWarning("Problem converting MEI to Humdrum (see warning above this line for possible reasons");
+        }
+
         this->SetHumdrumBuffer(out.str().c_str());
 #endif
         if (m_humdrumBuffer) {
@@ -2130,7 +2217,11 @@ std::string Toolkit::ConvertMEIToHumdrum(const std::string &meiData)
     pugi::xml_document xmlfile;
     xmlfile.load_string(meiData.c_str());
     std::stringstream conversion;
+
+    LogRedirectStart();
     bool status = converter.convert(conversion, xmlfile);
+    LogRedirectStop();
+
     if (!status) {
         LogError("Error converting MEI data to Humdrum: %s", conversion.str().c_str());
     }
